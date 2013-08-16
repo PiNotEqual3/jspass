@@ -5,28 +5,31 @@
     <title>JS-Pass</title>
 </head>
 <body>
+    <div>
+        <h2>Keys</h2>
+        <div>
+            <label>Name: </label><input type="text" id="name" /><br/>
+            <label>E-Mail: </label><input type="email" id="mail" /><br/>
+            <button id="gen_keys">Generate Key Pair</button>
+        </div>
+        <div class="block">
+            <h2>Our public key</h2>
+            <textarea id="pub_key" style="width: 560px;height: 200px;"></textarea>
+        </div>
+
+        <h2>Our private key</h2>
+        <textarea id="priv_key" style="width: 560px;height: 200px;"></textarea>
+        </div>
+    </div>
     <div class="block">
         <h2>Test Page</h2>
         <!--
            <form action="example.php" method="post" onsubmit="return encrypt();" name="myform" id="myform">
         -->
-        <form action="" method="post" onsubmit="return encrypt();" name="myform" id="myform">
-            <ul>
-                <li><label>Your mail (optional): </label><br/><input type="email" name="mail" id="mail" /></li>
-                <li><label>Your message: </label><br/><textarea name="message" id="message" style="width: 560px;height: 200px;"></textarea></li>
-            </ul>
-            <input type="button" name="encrypt-btn" id="encrypt-btn" value="encrypt" />
-            <input type="button" name="decrypt-btn" id="decrypt-btn" value="decrypt" />
-        </form>
-    </div>
-    <div><button id="gen_keys">Generate Keys</button></div>
-    <div class="block">
-        <h2>Our public key</h2>
-       <textarea id="pub_key" style="width: 560px;height: 200px;"></textarea>
-    </div>
-
-    <h2>Our private key</h2>
-       <textarea id="priv_key" style="width: 560px;height: 200px;"></textarea>
+        <label>Your message: </label><br/><textarea name="message" id="message" style="width: 560px;height: 200px;"></textarea>
+        <br/>
+        <input type="button" name="encrypt-btn" id="encrypt-btn" value="encrypt" />
+        <input type="button" name="decrypt-btn" id="decrypt-btn" value="decrypt" />
     </div>
     <script src="./jquery.min.js" type="text/javascript" charset="utf-8"></script>
     <script src="./openpgp.js" type="text/javascript" charset="utf-8"></script>
