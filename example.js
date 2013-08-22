@@ -1,8 +1,47 @@
 /*
 
-
+ToDo
+ - password protect private key
+ - store/load key in browser
+ - store/load data
+ - Tree Storage Container (EncryptedTree)
+ - Search in EncryptedTree
+ - add public keys to Tree Storage Node (friends)
 
  */
+/*
+Users = [
+    {
+         name: 'Bob',
+         public_key: ''
+    },{
+         name: 'Alice',
+         public_key: ''
+    }
+]
+
+EncryptedTreeNode = {
+    data_blocks: [],
+    sub_nodes: [],
+    //allow: ['user01', 'user02']
+}
+
+EncryptedBlock = {
+    name: 'name',
+    description: 'details for search',
+    data: 'encrypted stuff',
+    access: [
+        {
+            user: 'user01',
+            key: encrypt('user01', 'private-key-for-this-message')
+        },
+        {
+            user: 'user02',
+            key: encrypt('user02', 'private-key-for-this-message')
+        }
+    ]
+};
+*/
 
 // Error Message function for openpgp
 function showMessages(text)
@@ -99,6 +138,10 @@ function get_key()
     return key;
 }
 
+
+/**
+ * test for pgp functions
+ */
 pgptest();
 function pgptest()
 {
@@ -143,16 +186,57 @@ function pgptest()
     }
 }
 
-function require(script) {
-    $.ajax({
-        url: script,
-        dataType: "script",
-        async: false,           // <-- this is the key
-        success: function () {
-            // all good...
-        },
-        error: function () {
-            throw new Error("Could not load script " + script);
-        }
-    });
+/**
+ * JS File Download.
+ *
+ * @param text
+ * @param filename
+ */
+function textfile_download(text, filename)
+{
+    var blob = new Blob([text], {type: "text/plain;charset=utf-8"});
+    saveAs(blob, filename);
 }
+$('#priv_key_store_file').click(function(){
+    var key = $('#priv_key').val();
+    if (key)
+    {
+        textfile_download(key, 'privat_key.asc');
+    }
+
+    return false;
+});
+
+/**
+ * JS File Upload.
+ * requires browser with FileReader support
+ *
+ * @param evt
+ * @param callback
+ */
+function textfile_upload_handler(evt, callback)
+{
+    if (FileReader)
+    {
+        var reader = new FileReader();
+        reader.onload = (function(theFile) {
+            return function(e) {
+                //console.log(theFile.name);
+                var r = e.target.result;
+                var data = r.substr(r.indexOf('base64') + 7);
+                callback(atob(data));
+            };
+        })( evt.target.files[0] );
+        // read file
+        reader.readAsDataURL( evt.target.files[0] );
+    }
+    else
+    {
+        alert('FileReader not supported!');
+    }
+}
+$('#priv_key_load_file').change(function(event){
+    textfile_upload_handler(event, function(file_content){
+        $('#priv_key').val(file_content);
+    });
+});
