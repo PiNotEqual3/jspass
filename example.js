@@ -140,53 +140,6 @@ function get_key()
 
 
 /**
- * test for pgp functions
- */
-pgptest();
-function pgptest()
-{
-    init();
-
-    generate_keys("Mr. Tester <test@test.de>");
-
-    // read keys
-    var key = get_key();
-
-    var msg_crypted = encrypt('test message');
-
-    var priv_key = openpgp.read_privateKey(key.privateKeyArmored);
-
-    // decrypt
-    var msg = openpgp.read_message(msg_crypted);
-    var keymat = null;
-    var sesskey = null;
-    // Find the private (sub)key for the session key of the message
-    for (var i = 0; i< msg[0].sessionKeys.length; i++) {
-        if (priv_key[0].privateKeyPacket.publicKey.getKeyId() == msg[0].sessionKeys[i].keyId.bytes) {
-            keymat = { key: priv_key[0], keymaterial: priv_key[0].privateKeyPacket};
-            sesskey = msg[0].sessionKeys[i];
-            break;
-        }
-        for (var j = 0; j < priv_key[0].subKeys.length; j++) {
-            if (priv_key[0].subKeys[j].publicKey.getKeyId() == msg[0].sessionKeys[i].keyId.bytes) {
-                keymat = { key: priv_key[0], keymaterial: priv_key[0].subKeys[j]};
-                sesskey = msg[0].sessionKeys[i];
-                break;
-            }
-        }
-    }
-    if (keymat != null) {
-        if (!keymat.keymaterial.decryptSecretMPIs($('#decpassword').val())) {
-            console.log("Password for secrect key was incorrect!");
-            return;
-        }
-        console.log(msg[0].decrypt(keymat, sesskey));
-    } else {
-        console.log("No private key found!");
-    }
-}
-
-/**
  * JS File Download.
  *
  * @param text
@@ -240,3 +193,163 @@ $('#priv_key_load_file').change(function(event){
         $('#priv_key').val(file_content);
     });
 });
+
+// //////////////////////////////// angular
+/*
+Views:
+- Keys: Priv/Pub Key, genieren, laden/speichern
+- Tree View: Labels
+- List View: Such Feld, Liste mit CryptedBoxes
+- DecrypedView: decryped content (TextBox)
+- Friends Public Key List
+
+*/
+
+angular.module('crypt', [])
+    .config(function(){
+        if (window.crypto.getRandomValues) {
+            //require("./openpgp.min.js");
+            openpgp.init();
+
+        } else {
+            window.alert("Error: Browser not supported\nReason: We need a cryptographically secure PRNG to be implemented (i.e. the window.crypto method)\nSolution: Use Chrome >= 11, Safari >= 3.1 or Firefox >= 21");
+            return false;
+        }
+    })
+    .value('pgp', {
+        keyPair: null,
+        password: '',
+        generateKeyPair: function(user, password){
+            //generate key
+            this.keyPair = openpgp.generate_key_pair(1, 1024, user, password);
+            this.password = password;
+            return {
+                public_key: this.keyPair.publicKeyArmored,
+                private_key: this.keyPair.privateKeyArmored
+            };
+        },
+        encrypt: function(message)
+        {
+            // encrypt
+            var msg_crypted = openpgp.write_encrypted_message(
+                openpgp.read_publicKey(this.keyPair.publicKeyArmored), message);
+
+            return msg_crypted;
+        },
+        decrypt: function(msg_crypted, password)
+        {
+            var key = this.keyPair;
+            var priv_key = openpgp.read_privateKey(key.privateKeyArmored);
+
+            var msg = openpgp.read_message(msg_crypted);
+            var keymat = null;
+            var sesskey = null;
+
+            // Find the private (sub)key for the session key of the message
+            for (var i = 0; i< msg[0].sessionKeys.length; i++) {
+                if (priv_key[0].privateKeyPacket.publicKey.getKeyId() == msg[0].sessionKeys[i].keyId.bytes) {
+                    keymat = { key: priv_key[0], keymaterial: priv_key[0].privateKeyPacket};
+                    sesskey = msg[0].sessionKeys[i];
+                    break;
+                }
+                for (var j = 0; j < priv_key[0].subKeys.length; j++) {
+                    if (priv_key[0].subKeys[j].publicKey.getKeyId() == msg[0].sessionKeys[i].keyId.bytes) {
+                        keymat = { key: priv_key[0], keymaterial: priv_key[0].subKeys[j]};
+                        sesskey = msg[0].sessionKeys[i];
+                        break;
+                    }
+                }
+            }
+            if (keymat != null) {
+                if (!keymat.keymaterial.decryptSecretMPIs(password)){
+                    console.log("Password for secrect key was incorrect!");
+                    return;
+                }
+                return msg[0].decrypt(keymat, sesskey);
+            } else {
+                console.log("No private key found!");
+            }
+        }
+    });
+
+angular.module('storage', [])
+    .value('storage', {
+        // General storage function
+        set: function(name, data)
+        {
+            this.local.set(name, data);
+        },
+        get: function(name)
+        {
+            return this.local.get(name);
+        },
+        // localStorage
+        local: {
+            set: function(name, data)
+            {
+                window.localStorage.setItem(name, JSON.stringify(data));
+            },
+            get: function(name)
+            {
+                return JSON.parse( window.localStorage.getItem(name) );
+            }
+        }
+    });
+
+angular.module('jsPass', ['crypt', 'storage'])
+    .run(function(pgp, storage){
+        var key_pair = storage.get('key_pair');
+        if (!key_pair)
+        {
+            key_pair = pgp.generateKeyPair('master');
+            storage.set('key_pair', key_pair);
+        }
+        pgp.keyPair = key_pair;
+    });
+
+function DecrypedView($scope, pgp, storage) {
+    //var key_pair = pgp.generateKeyPair('master');
+    $scope.content = 'Test content';
+    //$scope.content = pgp.encrypt('fsds');
+
+    $scope.encrypt = function()
+    {
+        $scope.content = pgp.encrypt( $scope.content );
+    };
+    $scope.decrypt = function()
+    {
+        $scope.content = pgp.decrypt( $scope.content );
+    };
+
+    $scope.items = [
+        {
+            name: 'Google',
+            data: ''
+        },{
+            name: 'Facebook',
+            data: ''
+        },{
+            name: 'Twitter',
+            data: ''
+        }
+    ];
+    $scope.selected = null;
+    $scope.load = function(item)
+    {
+        if (item.data)
+        {
+            $scope.content = pgp.decrypt( item.data );
+        }
+        else
+        {
+            $scope.content = '';
+        }
+    };
+    $scope.store = function()
+    {
+        if ($scope.selected)
+        {
+            $scope.selected.data = pgp.encrypt();
+        };
+    };
+};

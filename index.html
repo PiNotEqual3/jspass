@@ -9,10 +9,13 @@
     <!-- angularjs -->
     <script src="angular.min.js"></script>
 </head>
-<body>
-    <div ng-app>
-            <input type="text" ng-model="test" >
-            {{test}}
+<body ng-app="jsPass">
+    <div ng-controller="DecrypedView">
+        <lu>
+            <li ng-repeat="item in items" ng-click="load(item)">{{ item.name }}</li>
+        </lu>
+        <textarea ng-model="content" style="width: 560px;height: 200px;" ng-blur="store()"></textarea>
+        <button ng-click="store()">store</button>
     </div>
     <div>
         <h2>Keys</h2>
@@ -22,11 +25,11 @@
             <button id="gen_keys">Generate Key Pair</button>
         </div>
         <div class="block">
-            <h2>Our public key</h2>
+            <h2>Public key</h2>
             <textarea id="pub_key" style="width: 560px;height: 200px;"></textarea>
         </div>
 
-        <h2>Our private key</h2>
+        <h2>Private key</h2>
         <textarea id="priv_key" style="width: 560px;height: 200px;"></textarea>
         <p>
             <a id="priv_key_store_file" href="#">Download</a>, Upload: <input type="file" id="priv_key_load_file" name="file" />
