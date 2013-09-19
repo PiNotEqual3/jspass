@@ -22,6 +22,7 @@
                     <h2>Generate Key</h2>
                     <label for="generate_key_name">Name: </label><input type="text" id="generate_key_name" ng-model="name" required /><br/>
                     <label for="generate_key_mail">E-Mail: </label><input type="email" id="generate_key_mail" ng-model="email" /><br/>
+                    <label for="generate_key_password">Password: </label><input type="password" id="generate_key_password" ng-model="password" /><br/>
                     {{ user() }} <br />
                     <button ng-click="generate_key()">Generate Key Pair</button>
                 </form>
@@ -37,6 +38,7 @@
         </div>
     </div>
     <div ng-controller="DecrypedView">
+        <label for="decrypt_password">Password: </label><input type="password" id="decrypt_password" ng-model="password" /><br/>
         <div><input ng-model="new_item"> <button ng-click="add_item()">Add</button></div>
         <lu>
             <li ng-repeat="item in items" ng-click="load(item)">{{ item.name }}</li>

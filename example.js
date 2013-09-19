@@ -4,8 +4,7 @@
 
 ToDo
  - Tree Storage Container (EncryptedTree)
- - password protect private key
- - store/load data
+ - store/load encrypted messages (as file)
  - add public keys to Tree Storage Node (friends)
 
  */
@@ -257,7 +256,7 @@ function DecrypedView($scope, pgp, storage) {
         $scope.selected = item;
         if (item.data)
         {
-            $scope.content = pgp.decrypt( item.data );
+            $scope.content = pgp.decrypt( item.data, $scope.password );
         }
         else
         {
@@ -304,7 +303,7 @@ function KeysView($scope, pgp, storage)
     {
         if ($scope.generate_key_form.$valid)
         {
-            pgp.generateKeyPair( $scope.user() );
+            pgp.generateKeyPair( $scope.user(), $scope.password );
             $scope.store_key();
             $scope.show('private_key');
         }
