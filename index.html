@@ -10,42 +10,41 @@
     <script src="angular.min.js"></script>
 </head>
 <body ng-app="jsPass">
+    <div ng-controller="KeysView">
+        <lu>
+            <li ng-click="show('generate_key')">Generate Key</li>
+            <li ng-click="show('private_key')">Private Key</li>
+            <li ng-click="show('public_key')">Public Key</li>
+        </lu>
+        <div>
+            <div ng-show="view == 'generate_key'">
+                <form name="generate_key_form">
+                    <h2>Generate Key</h2>
+                    <label for="generate_key_name">Name: </label><input type="text" id="generate_key_name" ng-model="name" required /><br/>
+                    <label for="generate_key_mail">E-Mail: </label><input type="email" id="generate_key_mail" ng-model="email" /><br/>
+                    {{ user() }} <br />
+                    <button ng-click="generate_key()">Generate Key Pair</button>
+                </form>
+            </div>
+            <div ng-show="view == 'private_key' || view == 'public_key'">
+                <h2>{{ key_title }}</h2>
+                <textarea style="width: 560px;height: 200px;" ng-model="key" ng-blur="store_key()"></textarea>
+                <p>
+                    <a href="#" ng-click="key_download()">Download</a>,
+                    Upload: <input type="file" onchange="angular.element(this).scope().upload_key(this);" name="file" />
+                </p>
+            </div>
+        </div>
+    </div>
     <div ng-controller="DecrypedView">
+        <div><input ng-model="new_item"> <button ng-click="add_item()">Add</button></div>
         <lu>
             <li ng-repeat="item in items" ng-click="load(item)">{{ item.name }}</li>
         </lu>
-        <textarea ng-model="content" style="width: 560px;height: 200px;" ng-blur="store()"></textarea>
+        <textarea ng-model="content" style="width: 560px;height: 200px;" ng-blur="store()"></textarea><br />
         <button ng-click="store()">store</button>
     </div>
-    <div>
-        <h2>Keys</h2>
-        <div>
-            <label>Name: </label><input type="text" id="name" /><br/>
-            <label>E-Mail: </label><input type="email" id="mail" /><br/>
-            <button id="gen_keys">Generate Key Pair</button>
-        </div>
-        <div class="block">
-            <h2>Public key</h2>
-            <textarea id="pub_key" style="width: 560px;height: 200px;"></textarea>
-        </div>
 
-        <h2>Private key</h2>
-        <textarea id="priv_key" style="width: 560px;height: 200px;"></textarea>
-        <p>
-            <a id="priv_key_store_file" href="#">Download</a>, Upload: <input type="file" id="priv_key_load_file" name="file" />
-        </p>
-        </div>
-    </div>
-    <div class="block">
-        <h2>Test Page</h2>
-        <!--
-           <form action="example.php" method="post" onsubmit="return encrypt();" name="myform" id="myform">
-        -->
-        <label>Your message: </label><br/><textarea name="message" id="message" style="width: 560px;height: 200px;"></textarea>
-        <br/>
-        <input type="button" name="encrypt-btn" id="encrypt-btn" value="encrypt" />
-        <input type="button" name="decrypt-btn" id="decrypt-btn" value="decrypt" />
-    </div>
     <script src="./jquery.min.js" type="text/javascript" charset="utf-8"></script>
     <script src="./openpgp.js" type="text/javascript" charset="utf-8"></script>
     <script src="./example.js" type="text/javascript" charset="utf-8"></script>
