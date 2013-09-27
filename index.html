@@ -8,15 +8,40 @@
     <script src="Blob.js"></script>
     <!-- angularjs -->
     <script src="angular.min.js"></script>
+    <style type="text/css">
+        .tab-box {
+            border: 1px solid black;
+            padding: 10px;
+            margin: 10px;
+            border-radius: 3px;
+        }
+        .tab-box .tab-menu {
+            list-style-type: none;
+        }
+        .tab-box .tab-menu li {
+            float: left;
+            padding: 5px;
+            border: 1px solid black;
+            margin: 5px;
+            border-radius: 3px;
+            background-color: #ddd;
+        }
+        .tab-box .tab-menu li:hover {
+            box-shadow: 1px 1px 5px #bbb;
+        }
+        .tab-box .tab-content {
+            clear: both;
+        }
+    </style>
 </head>
 <body ng-app="jsPass">
-    <div ng-controller="KeysView">
-        <lu>
+    <div ng-controller="KeysView" class="tab-box">
+        <lu class="tab-menu">
             <li ng-click="show('generate_key')">Generate Key</li>
             <li ng-click="show('private_key')">Private Key</li>
             <li ng-click="show('public_key')">Public Key</li>
         </lu>
-        <div>
+        <div class="tab-content">
             <div ng-show="view == 'generate_key'">
                 <form name="generate_key_form">
                     <h2>Generate Key</h2>
@@ -37,14 +62,16 @@
             </div>
         </div>
     </div>
-    <div ng-controller="DecrypedView">
+    <div ng-controller="DecrypedView" class="tab-box">
         <label for="decrypt_password">Password: </label><input type="password" id="decrypt_password" ng-model="password" /><br/>
-        <div><input ng-model="new_item"> <button ng-click="add_item()">Add</button></div>
-        <lu>
-            <li ng-repeat="item in items" ng-click="load(item)">{{ item.name }}</li>
-        </lu>
-        <textarea ng-model="content" style="width: 560px;height: 200px;" ng-blur="store()"></textarea><br />
-        <button ng-click="store()">store</button>
+        <form ng-submit="add_item()">
+            <div><input ng-model="new_item"> <button type="submit">Add</button></div>
+        </form>
+        <select size="5" style="width: 566px;">
+            <option ng-repeat="item in items" ng-click="load(item)">{{ item.name }}</option>
+        </select>
+        <textarea ng-model="content" style="width: 560px;height: 200px;" ng-blur="store()" ng-disabled="!selected"></textarea><br />
+        <button ng-click="store()">Store</button>
     </div>
 
     <script src="./jquery.min.js" type="text/javascript" charset="utf-8"></script>
