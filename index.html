@@ -21,16 +21,25 @@
         .tab-box .tab-menu li {
             float: left;
             padding: 5px;
-            border: 1px solid black;
-            margin: 5px;
             border-radius: 3px;
+            margin-right: 5px;
+            margin-bottom: 10px;
+            border: 1px solid black;
             background-color: #ddd;
+            cursor: pointer;
         }
         .tab-box .tab-menu li:hover {
             box-shadow: 1px 1px 5px #bbb;
         }
         .tab-box .tab-content {
             clear: both;
+        }
+        .list .remove-x {
+            float: right;
+        }
+        .list .item:hover {
+            background-color: #bbb;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -67,9 +76,9 @@
         <form ng-submit="add_item()">
             <div><input ng-model="new_item"> <button type="submit">Add</button></div>
         </form>
-        <select size="5" style="width: 566px;">
-            <option ng-repeat="item in items" ng-click="load(item)">{{ item.name }}</option>
-        </select>
+        <div style="width: 566px;" class="list">
+            <div ng-repeat="item in items" ng-click="load(item)" class="item">{{ item.name }}<div ng-click="remove(item.name)" class="remove-x">x</div></div>
+        </div>
         <textarea ng-model="content" style="width: 560px;height: 200px;" ng-blur="store()" ng-disabled="!selected"></textarea><br />
         <button ng-click="store()">Store</button>
     </div>

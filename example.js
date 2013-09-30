@@ -3,9 +3,15 @@
 /*
 
 ToDo
- - Tree Storage Container (EncryptedTree)
  - store/load encrypted messages (as file)
+ - key ring
+ var keys = openpgp.generate_key_pair
+ openpgp.keyring.importPrivateKey(keys.privateKeyArmored);
+ openpgp.keyring.importPublicKey(keys.publicKeyArmored);
+ openpgp.keyring.store();
+ openpgp.keyring.init();
  - add public keys to Tree Storage Node (friends)
+ - Tree Storage Container (EncryptedTree)
 
  */
 /*
@@ -40,6 +46,14 @@ EncryptedBlock = {
         }
     ]
 };
+*/
+
+/*
+// get user from private key
+p = openpgp.read_privateKey(g_key_pair.privateKeyArmored);
+p[0].userIds[0].text
+// get user from public key
+p = openpgp.read_publicKey(g_key_pair.publicKeyArmored);
 */
 
 // Error Message function for openpgp
@@ -183,9 +197,12 @@ angular.module('crypt', [])
                 console.log("No private key found!");
             }
         }
-    }
-);
+    });
 
+/**
+ * Storage for data.
+ * Currently only localStorage but could be extended to public or private servers.
+ */
 angular.module('storage', [])
     .value('storage', {
         // General storage function
@@ -211,6 +228,9 @@ angular.module('storage', [])
     }
 );
 
+/**
+ * Main App Module
+ */
 var jsPass = angular.module('jsPass', ['crypt', 'storage'])
     .run(function(pgp, storage){
         var key_pair = storage.get('key_pair');
@@ -223,6 +243,9 @@ var jsPass = angular.module('jsPass', ['crypt', 'storage'])
     }
 );
 
+/**
+ * html blur event for angularjs
+ */
 jsPass.directive('ngBlur', function() {
     return function( scope, elem, attrs ) {
         elem.bind('blur', function() {
@@ -231,24 +254,135 @@ jsPass.directive('ngBlur', function() {
     };
 });
 
-function DecrypedView($scope, pgp, storage) {
+/**
+ * List of users for encrypted content
+ */
+jsPass.factory('Users', function() {
+    var users = [];
+
+    return {
+        add: function(name, public_key)
+        {
+            users.push({
+                name: name,
+                public_key: public_key
+            });
+        },
+        remove: function(user)
+        {
+            // TODO
+        }
+    };
+});
+
+/**
+ * Container for encrypted content
+ */
+jsPass.factory('CryptContainer', function() {
+    var items = [];
+
+    return {
+        fill: function(new_items) {
+            if (angular.isArray(new_items))
+            {
+                items = new_items;
+            }
+        },
+        getAll: function() {
+            return items;
+        },
+        count: function() {
+            return items.length;
+        },
+        add: function(name) {
+            var key = items.indexOf(name);
+            if (key > -1)
+            {
+                items.push({
+                    name: name
+                });
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        },
+        find: function(name)
+        {
+            var found = -1;
+            angular.forEach(items, function(item, key) {
+                if (item.name == name)
+                {
+                    found = key;
+                }
+            });
+            return found;
+        },
+        get: function(name)
+        {
+            var key = this.find(name);
+            if (key > -1)
+            {
+                return items[key];
+            }
+            else
+            {
+                return false;
+            }
+        },
+        set: function(item)
+        {
+            var key = this.find(item.name);
+            if (key > -1)
+            {
+                items[key] = item;
+            }
+            else
+            {
+                return false;
+            }
+        },
+        remove: function(name)
+        {
+            var key = this.find(name);
+            if (key > -1)
+            {
+                return items.splice(key, 1);
+            }
+            else
+            {
+                return false;
+            }
+        }
+    };
+});
+
+/**
+ * View controller for encryped content
+ */
+function DecrypedView($scope, pgp, storage, CryptContainer) {
     //var key_pair = pgp.generateKeyPair('master');
     $scope.content = '';
-    $scope.items = storage.get('items');
-    if ($scope.items == null || typeof $scope.items.push != "function")
-    {
-        $scope.items = [];
-    };
     $scope.selected = null;
 
+    // Get encrypted values from storage
+    CryptContainer.fill(storage.get('items'));
+
+    // Show encrypted values in view
+    $scope.get = function()
+    {
+        return CryptContainer.getAll();
+    };
+    // Update view
+    $scope.$watch( CryptContainer.count, function () {
+        $scope.items = CryptContainer.getAll();
+    });
+
+    // Add item
     $scope.add_item = function()
     {
-        var new_item = {
-            name: $scope.new_item,
-            data: ''
-        };
-        $scope.items.push( new_item );
-        storage.set('items', $scope.items);
+        CryptContainer.add( $scope.new_item );
     };
 
     $scope.load = function(item)
@@ -268,11 +402,19 @@ function DecrypedView($scope, pgp, storage) {
         if ($scope.selected)
         {
             $scope.selected.data = pgp.encrypt( $scope.content );
+            CryptContainer.set( $scope.selected );
             storage.set('items', $scope.items);
         };
     };
+    $scope.remove = function(name)
+    {
+        CryptContainer.remove(name);
+    }
 };
 
+/**
+ * View Controller for private and public key
+ */
 function KeysView($scope, pgp, storage)
 {
     $scope.show = function(mode)
@@ -303,7 +445,7 @@ function KeysView($scope, pgp, storage)
     {
         if ($scope.generate_key_form.$valid)
         {
-            pgp.generateKeyPair( $scope.user(), $scope.password );
+            var key_pair = pgp.generateKeyPair( $scope.user(), $scope.password );
             $scope.store_key();
             $scope.show('private_key');
         }
